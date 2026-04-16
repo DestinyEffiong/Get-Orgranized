@@ -1,0 +1,1 @@
+Get-ChildItem "C:\Users\HP\Desktop\SLIMDEV\go\src" -Recurse -Include "*.tsx","*.ts" | Select-String -Pattern "#[0-9A-Fa-f]{3,8}" -AllMatches | ForEach-Object { \extglob.Matches } | ForEach-Object { \extglob.Value } | Group-Object | Sort-Object Count -Descending | Select-Object -First 60 | ForEach-Object { "{0,6} {1}" -f \extglob.Count, \extglob.Name }
