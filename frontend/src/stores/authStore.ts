@@ -59,8 +59,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       const response = await authService.signup(data)
 
-      // Save user ID to localStorage for session
+      // Save user ID to localStorage for backward compatibility
       localStorage.setItem('currentUserId', response.user.id)
+      // Token is already saved by authService via setAuthToken
 
       set({
         currentUser: response.user,
@@ -82,8 +83,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       const response = await authService.login(credentials)
 
-      // Save user ID to localStorage for session
+      // Save user ID to localStorage for backward compatibility
       localStorage.setItem('currentUserId', response.user.id)
+      // Token is already saved by authService via setAuthToken
 
       set({
         currentUser: response.user,

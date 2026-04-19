@@ -1,13 +1,12 @@
 /** @jsxImportSource theme-ui */
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect } from 'react'
 import { CheckCircle2, Circle, AlertCircle, Calendar as CalendarIcon, Inbox as InboxIcon } from 'lucide-react'
 import { useAuthStore, useTaskStore } from '../stores'
 import { useSidebar } from '../contexts'
 import Sidebar from '../components/Sidebar'
 
 const InboxPage = () => {
-  const navigate = useNavigate()
+
   const { currentUser } = useAuthStore()
   const { sidebarWidth } = useSidebar()
   const { loadTasks, getTasks, completeTask, incompleteTask } = useTaskStore()

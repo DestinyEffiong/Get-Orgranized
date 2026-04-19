@@ -32,13 +32,11 @@ const QuickAddModal = ({ isOpen, onClose }: QuickAddModalProps) => {
       await createTask({
         title: title.trim(),
         description: '',
-        status: 'todo',
         priority,
         dueDate: dueDate ? new Date(dueDate).getTime() : undefined,
         tags,
         userId: currentUser.id,
-        isHabit: false,
-        habitCompletions: {}
+        isHabit: false
       })
 
       // Reset form
