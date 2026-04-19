@@ -1,6 +1,6 @@
 /** @jsxImportSource theme-ui */
 import { useState, useEffect, useMemo } from 'react'
-import { CheckCircle2, PlusCircle, Trash2, Target, RotateCcw, Activity, Filter, ChevronUp, ChevronDown } from 'lucide-react'
+import { CheckCircle2, PlusCircle, Trash2, Target, Activity, ChevronUp, ChevronDown } from 'lucide-react'
 import { useAuthStore, useTaskStore, useGoalStore } from '../stores'
 import { useSidebar } from '../contexts'
 import Sidebar from '../components/Sidebar'
@@ -55,7 +55,7 @@ const ActivityPage = () => {
   const { currentUser } = useAuthStore()
   const { sidebarWidth } = useSidebar()
   const { loadTasks, getTasks, loadDeletedTasks } = useTaskStore()
-  const { loadGoals, getActiveGoals, getCompletedGoals, loadDeletedGoals, getSubGoals } = useGoalStore()
+  const { loadGoals, getActiveGoals, getCompletedGoals, loadDeletedGoals } = useGoalStore()
   const [filter, setFilter] = useState<ActivityType>('all')
   const [statsPeriodIndex, setStatsPeriodIndex] = useState(0)
   const deletedTasks = useTaskStore(s => s.deletedTasks)

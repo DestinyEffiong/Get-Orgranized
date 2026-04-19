@@ -4,7 +4,7 @@ import { Trash2, RotateCcw, AlertTriangle, CheckSquare, Target, Square, CheckSqu
 import { useAuthStore, useTaskStore, useGoalStore } from '../stores'
 import { useSidebar } from '../contexts'
 import Sidebar from '../components/Sidebar'
-import type { Task, Goal } from '../types'
+
 
 type TrashTab = 'tasks' | 'goals'
 
