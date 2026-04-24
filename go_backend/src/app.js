@@ -4,6 +4,8 @@ import cors from 'cors'
 import { connectDB } from './config/db.js'
 import authRoutes from './routes/auth.js'
 import usersRoutes from './routes/users.js'
+import taskRoutes from './routes/tasks.js'
+import goalRoutes from './routes/goals.js'
 
 const app = express()
 
@@ -18,6 +20,8 @@ app.use(cors({
 app.use(express.json())
 
 app.use('/api/users', usersRoutes)
+app.use('/api/tasks', taskRoutes)
+app.use('/api/goals', goalRoutes)
 
 // Routes
 app.use('/api/auth', authRoutes)
