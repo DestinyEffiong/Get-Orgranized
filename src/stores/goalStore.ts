@@ -17,6 +17,7 @@ interface GoalState {
   restoreGoal: (goalId: string) => Promise<Goal>
   permanentDeleteGoal: (goalId: string) => Promise<void>
   completeGoal: (goalId: string) => Promise<Goal>
+  incompleteGoal: (goalId: string) => Promise<Goal>
   archiveGoal: (goalId: string) => Promise<Goal>
   searchGoals: (userId: string, query: string) => Promise<Goal[]>
   clearError: () => void
@@ -173,6 +174,20 @@ export const useGoalStore = create<GoalState>((set, get) => ({
       set({
         error: error instanceof Error ? error.message : 'Failed to complete goal',
       })
+      throw error
+    }
+  },
+
+    incompleteGoal: async (goalId: string) => {
+    try {
+      set({ error: null })
+      const updated = await goalService.update(goalId, { status: 'active' })
+      set(state => ({
+        goals: state.goals.map(goal => goal.id === goalId ? updated : goal)
+      }))
+      return updated
+    } catch (error) {
+      set({ error: error instanceof Error ? error.message : 'Failed to incomplete goal' })
       throw error
     }
   },

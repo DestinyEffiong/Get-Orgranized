@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { Maximize2, Cloud, Sun, CloudRain, CloudSnow, CloudLightning, CloudDrizzle, CloudFog, Target, Calendar, Zap, TrendingUp, Search, CheckCircle2, Circle, Pencil, X, Flag, Tag, ChevronDown, ChevronUp, ListTodo } from 'lucide-react'
 import { useAuthStore, useTaskStore, useGoalStore } from '../stores'
 import EditTaskModal from '../components/EditTaskModal'
+import GoalDetailModal from '../components/GoalDetailModal'
 import type { Task, Goal } from '../types'
 import { categoryColors } from '../types/goal'
 import { getRandomQuote } from '../data/quotes'
@@ -15,10 +16,12 @@ const DashboardPage = () => {
   const { currentUser, logout } = useAuthStore()
   const { sidebarWidth } = useSidebar()
   const { tasks: storeTasks, loadTasks, getTasks, completeTask, incompleteTask } = useTaskStore()
-  const { goals, loadGoals } = useGoalStore()
+  const { goals, loadGoals, completeGoal, incompleteGoal } = useGoalStore()
+  const activeGoals = goals.filter(g => !g.deletedAt && g.status === 'active')
   const [currentQuote, setCurrentQuote] = useState(getRandomQuote())
   const [todaysFocus, setTodaysFocus] = useState('')
   const [editingTask, setEditingTask] = useState<Task | null>(null)
+  const [editingGoal, setEditingGoal] = useState<Goal | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchFocused, setSearchFocused] = useState(false)
   const searchRef = useRef<HTMLDivElement>(null)
@@ -304,6 +307,19 @@ const DashboardPage = () => {
       }
     } catch (error) {
       console.error('Failed to toggle task:', error)
+    }
+  }
+
+  
+    const handleToggleGoal = async (goalId: string, currentStatus: string) => {
+    try {
+      if (currentStatus === 'completed') {
+        await incompleteGoal(goalId)  // undo completion
+      } else {
+        await completeGoal(goalId)    // mark complete
+      }
+    } catch (error) {
+      console.error('Failed to toggle goal:', error)
     }
   }
 
@@ -1068,7 +1084,7 @@ const DashboardPage = () => {
               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.12)',
               borderRadius: '8px'
             }}>
-              <div sx={{ fontSize: 3, fontWeight: 'bold', color: 'text', mb: 0 }}>0</div>
+              <div sx={{ fontSize: 3, fontWeight: 'bold', color: 'text', mb: 0 }}>{activeGoals.length}</div>
               <div sx={{ fontSize: 0, color: 'muted' }}>Active Goals</div>
             </div>
             <div sx={{
@@ -1304,14 +1320,97 @@ const DashboardPage = () => {
             }}>
               Goals
             </h3>
-            <div sx={{
+            {activeGoals.length === 0 ? (
+              <div sx={{
               fontSize: 1,
               color: 'muted',
               lineHeight: 1.6
             }}>
               Set your goals and track your progress. Turn your dreams into achievable milestones.
             </div>
+          ) : (
+            <div sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 2
+              }}>
+                {activeGoals.slice(0, 5).map((goal) => (
+                  <div
+                    key={goal.id}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 2,
+                      p: 2,
+                      background: 'background',
+                      borderRadius: '8px',
+                      transition: 'background 0.2s',
+                      ':hover': {
+                        background: 'surfaceAlt'
+                      }
+                    }}
+                  >
+                <button
+                      onClick={() => handleToggleGoal(goal.id, goal.status)}
+                      sx={{
+                        background: 'transparent',
+                        border: 'none',
+                        cursor: 'pointer',
+                        padding: 0,
+                        display: 'flex',
+                        alignItems: 'center'
+                      }}
+                    >
+                      {goal.status === 'completed' ? (
+                        <CheckCircle2 size={20} color="#10B981" />
+                      ) : (
+                        <Circle size={20} color="#9CA3AF" />
+                      )}
+                    </button>
+                    <div sx={{
+                      flex: 1,
+                      fontSize: 1,
+                      color: goal.status === 'completed' ? 'textLight' : 'text',
+                      textDecoration: goal.status === 'completed' ? 'line-through' : 'none'
+                    }}>
+                      {goal.title}
+                    </div>
+                    {goal.status !== 'completed' && (
+                      <button
+                        onClick={() => setEditingGoal(goal)}
+                        sx={{
+                          background: 'transparent',
+                          border: 'none',
+                          cursor: 'pointer',
+                          color: 'muted',
+                          padding: '4px',
+                          borderRadius: '4px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          ':hover': {
+                            background: 'surfaceAlt'
+                          }
+                        }}
+                      >
+                        <Pencil size={14} />
+                      </button>
+                    )}
+                  </div>
+                ))}
+                {activeGoals.length > 5 && (
+                  <div sx={{
+                    fontSize: 0,
+                    color: 'muted',
+                    textAlign: 'center',
+                    mt: 1
+                  }}>
+                    +{activeGoals.length - 5} more goals  
+                  </div>
+                )}
+              </div>
+          )}
           </div>
+            
 
           {/* Stats Overview Card */}
           <div sx={{
@@ -1376,7 +1475,16 @@ const DashboardPage = () => {
           isOpen={true}
           onClose={() => setEditingTask(null)}
         />
-      )}
+        )}
+        {editingGoal && (
+          <GoalDetailModal 
+          goal={editingGoal}
+          isOpen={true}
+          onClose={() => setEditingGoal(null)}
+          initialEditing={true} 
+          />
+        )}
+  
     </div>
   )
 }
