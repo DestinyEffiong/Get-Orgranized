@@ -1,7 +1,6 @@
 import { create } from 'zustand'
 import type { User, SignupData, AuthCredentials } from '../types'
 import { authService } from '../services'
-import { initDB } from '../lib/db'
 
 interface AuthState {
   currentUser: User | null
@@ -28,9 +27,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   initialize: async () => {
     try {
       set({ isLoading: true, error: null })
-
-      // Initialize database
-      await initDB()
 
       // Check if user is logged in
       const user = await authService.getCurrentUser()
