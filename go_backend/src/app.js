@@ -1,6 +1,8 @@
 import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
+import morgan from 'morgan'
+import helmet from 'helmet'
 import { connectDB } from './config/db.js'
 import authRoutes from './routes/auth.js'
 import usersRoutes from './routes/users.js'
@@ -13,10 +15,12 @@ const app = express()
 await connectDB()
 
 // Middleware
+app.use(helmet()) // Security headers
 app.use(cors({
   origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
   credentials: true
 }))
+app.use(morgan('combined')) // Request logging
 app.use(express.json())
 
 app.use('/api/users', usersRoutes)

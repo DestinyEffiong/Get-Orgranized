@@ -1,10 +1,56 @@
 import bcryptjs from 'bcryptjs'
+import sanitizeHtml from 'sanitize-html'
 import { User } from '../models/User.js'
 import { Settings } from '../models/Settings.js'
 import { generateToken, verifyToken } from '../utils/tokenUtils.js'
 import { generateId } from '../utils/idGenerator.js'
 
 const BCRYPT_ROUNDS = parseInt(process.env.BCRYPT_ROUNDS) || 10
+
+//validate password
+const validatePassword = (password) => {
+  //errors is an aray that contains all error messages
+  const errors = []
+
+  //checks if password is less than 8 characters 
+  if (password.length < 8) {
+    errors.push('Password must be at least 8 characters long')
+  }
+
+    //checks if passwords contains at least one capital letter
+  if (!/[A-Z]/.test(password)) {
+    errors.push('Password must contain at least one uppercase letter')
+  }
+
+  // checks if passwords one small letter
+  if (!/[a-z]/.test(password)) {
+    errors.push('Password must contain at least one lowercase letter')
+  }
+
+  //checks if password contains at least one number
+  if (!/[0-9]/.test(password)) {
+    errors.push('Password must contain at least one number')
+  }
+
+  // //checks if password contains at least one special character
+  // if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+  //   errors.push('Password must contain at least one special character')
+  // }
+
+  //after checking all the conditions its return all the availble errors found if any
+  return errors
+}
+
+//valdate email
+const validateEmail = (email) => {
+  /*emasilRegex means "From the very start to the very end, 
+  look for a string that has some text (no spaces or @), 
+  followed by an @, followed by more text, then a dot, and finally the last bit of text.
+  */
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  //return true is email matches the pattern and false if it doesn't
+  return emailRegex.test(email.toLowerCase())
+}
 
 const userToResponse = (user) => {
   return {
@@ -18,16 +64,46 @@ const userToResponse = (user) => {
   }
 }
 
+
+//signup
 export const signup = async (req, res) => {
   try {
     const { email, password, fullName, profilePhoto } = req.body
 
+    // Sanitize inputs
+    // remove all html tags and all takes the plain text this prevent people from injectiong malicious script into our DB
+    const sanitizedEmail = sanitizeHtml(email, { allowedTags: [], allowedAttributes: {} })
+    const sanitizedFullName = sanitizeHtml(fullName, { allowedTags: [], allowedAttributes: {} })
+    const sanitizedProfilePhoto = profilePhoto ? sanitizeHtml(profilePhoto, { allowedTags: [], allowedAttributes: {} }) : null
+
     // Validate required fields
-    if (!email || !password || !fullName) {
+    if (!sanitizedEmail || !password || !sanitizedFullName) {
       return res.status(400).json({
         error: {
           message: 'Email, password, and fullName are required',
           code: 'MISSING_FIELDS'
+        }
+      })
+    }
+
+    // Validate password strength
+    const passwordErrors = validatePassword(password)
+    if (passwordErrors.length > 0) {
+      return res.status(400).json({
+        error: {
+          message: 'Password does not meet requirements',
+          details: passwordErrors,
+          code: 'INVALID_PASSWORD'
+        }
+      })
+    }
+
+    // Validate email format
+    if (!validateEmail(sanitizedEmail)) {
+      return res.status(400).json({
+        error: {
+          message: 'Invalid email format',
+          code: 'INVALID_EMAIL'
         }
       })
     }
@@ -52,10 +128,10 @@ export const signup = async (req, res) => {
     
     const newUser = new User({
       id: userId,
-      email: email.toLowerCase(),
-      fullName,
+      email: sanitizedEmail.toLowerCase(),
+      fullName: sanitizedFullName,
       passwordHash,
-      profilePhoto: profilePhoto || null
+      profilePhoto: sanitizedProfilePhoto
     })
 
     await newUser.save()
@@ -84,6 +160,7 @@ export const signup = async (req, res) => {
   }
 }
 
+//login
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body
@@ -140,6 +217,7 @@ export const login = async (req, res) => {
   }
 }
 
+//get current user uisng userId
 export const getCurrentUser = async (req, res) => {
   try {
     const user = await User.findOne({ id: req.userId })
@@ -167,6 +245,8 @@ export const getCurrentUser = async (req, res) => {
   }
 }
 
+
+//logout
 export const logout = async (req, res) => {
   // In a stateless JWT setup, logout is just clearing the token on client-side
   // If using token blacklist, add token to blacklist here
@@ -175,6 +255,7 @@ export const logout = async (req, res) => {
   })
 }
 
+//update user profile
 export const updateProfile = async (req, res) => {
   try {
     const { userId: paramUserId } = req.params
@@ -223,6 +304,7 @@ export const updateProfile = async (req, res) => {
   }
 }
 
+//changes password
 export const changePassword = async (req, res) => {
   try {
     const { oldPassword, newPassword } = req.body
@@ -252,6 +334,7 @@ export const changePassword = async (req, res) => {
     // Verify old password
     const isOldPasswordValid = await bcryptjs.compare(oldPassword, user.passwordHash)
 
+    //if isOldPassWordValid = false 
     if (!isOldPasswordValid) {
       return res.status(401).json({
         error: {

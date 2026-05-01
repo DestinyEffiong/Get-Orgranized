@@ -30,7 +30,7 @@ router.get('/search/:userId', searchTasks)
 
 // Generic routes (can be matched by parameter)
 router.post('/', createTask)                              // POST /api/tasks
-router.get('/', getTasks)                                 // GET /api/tasks?userId=xxx
+router.get('/:userId', getTasks)                          // GET /api/tasks/:userId
 router.get('/:taskId', getTaskById)                       // GET /api/tasks/123
 router.patch('/:taskId', updateTask)                      // PATCH /api/tasks/123
 router.delete('/:taskId', deleteTask)                     // DELETE /api/tasks/123

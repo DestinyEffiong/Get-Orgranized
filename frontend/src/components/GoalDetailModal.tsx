@@ -11,13 +11,14 @@ interface GoalDetailModalProps {
   goal: Goal
   isOpen: boolean
   onClose: () => void
+  initialEditing?: boolean
 }
 
-const GoalDetailModal = ({ goal, isOpen, onClose }: GoalDetailModalProps) => {
+const GoalDetailModal = ({ goal, isOpen, onClose, initialEditing }: GoalDetailModalProps) => {
   const { currentUser } = useAuthStore()
   const { updateGoal, completeGoal, createGoal, getSubGoals } = useGoalStore()
   const { getTasks, createTask, updateTask, deleteTask } = useTaskStore()
-  const [isEditing, setIsEditing] = useState(false)
+  const [isEditing, setIsEditing] = useState(initialEditing)
   const [title, setTitle] = useState(goal.title)
   const [description, setDescription] = useState(goal.description)
   const [category, setCategory] = useState<GoalCategory>(goal.category)
