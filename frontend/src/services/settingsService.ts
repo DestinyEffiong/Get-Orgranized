@@ -1,20 +1,24 @@
-import { getDB } from '../lib/db'
+import { apiGet, apiPatch } from '../utils/apiClient'
 import type { UserSettings } from '../types'
 
 export type UpdateSettingsData = Partial<Omit<UserSettings, 'userId' | 'updatedAt'>>
 
 /**
  * Settings Service
- * This service abstracts settings management logic.
- * When backend is ready, replace IndexedDB calls with API calls.
+ * Now uses backend API for all operations
+ * Service interface remains the same for zero-impact integration
  */
 export const settingsService = {
   /**
-   * Get user settings
+   * Get user settings via API
    */
   get: async (userId: string): Promise<UserSettings | undefined> => {
-    const db = await getDB()
-    return await db.get('settings', userId)
+    try {
+      const response = await apiGet<{ settings: UserSettings }>(`/api/users/${userId}/settings`)
+      return response.settings
+    } catch (error) {
+      return undefined
+    }
   },
 
   /**
@@ -38,37 +42,21 @@ export const settingsService = {
       updatedAt: Date.now(),
     }
 
-    // Save default settings
-    const db = await getDB()
-    await db.put('settings', defaultSettings)
-
     return defaultSettings
   },
 
   /**
-   * Update user settings
+   * Update user settings via API
    */
   update: async (userId: string, updates: UpdateSettingsData): Promise<UserSettings> => {
-    const db = await getDB()
-
-    const currentSettings = await settingsService.getOrDefault(userId)
-
-    const updatedSettings: UserSettings = {
-      ...currentSettings,
-      ...updates,
-      updatedAt: Date.now(),
-    }
-
-    await db.put('settings', updatedSettings)
-    return updatedSettings
+    const response = await apiPatch<{ settings: UserSettings }>(`/api/users/${userId}/settings`, updates)
+    return response.settings
   },
 
   /**
    * Reset settings to default
    */
   reset: async (userId: string): Promise<UserSettings> => {
-    const db = await getDB()
-
     const defaultSettings: UserSettings = {
       userId,
       theme: 'auto',
@@ -79,28 +67,13 @@ export const settingsService = {
       updatedAt: Date.now(),
     }
 
-    await db.put('settings', defaultSettings)
-    return defaultSettings
+    const response = await apiPatch<{ settings: UserSettings }>(`/api/users/${userId}/settings`, defaultSettings)
+    return response.settings
   },
 }
 
 /**
- * BACKEND MIGRATION GUIDE:
- *
- * When ready to add backend, replace the implementations with API calls:
- *
- * Example:
- *
- * get: async (userId: string): Promise<UserSettings | undefined> => {
- *   const response = await fetch(`/api/settings/${userId}`, {
- *     headers: { 'Authorization': `Bearer ${getToken()}` },
- *   })
- *
- *   if (!response.ok) {
- *     if (response.status === 404) return undefined
- *     throw new Error('Failed to fetch settings')
- *   }
- *
- *   return response.json()
- * }
+ * NOTE: settingsService has been migrated to use the backend API
+ * All IndexedDB calls have been replaced with API calls
+ * The service interface remains the same for zero-impact integration
  */
